@@ -1,17 +1,16 @@
 // ignore_for_file: prefer_const_constructors, prefer_collection_literals
 
 import 'dart:async';
-import 'dart:ffi';
-
-import 'package:better_bus/api/busStop.dart';
-import 'package:better_bus/api/kowloonBus_api.dart';
 import 'package:better_bus/controller/appController.dart';
 import 'package:better_bus/main.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/src/widgets/framework.dart';
-import 'package:flutter/src/widgets/placeholder.dart';
+
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+
+import '../api/routeStop_api.dart';
+import '../models/BusStop.dart';
+import '../models/RouteStop.dart';
 
 class MapPage extends StatefulWidget {
   const MapPage({super.key});
@@ -27,7 +26,11 @@ class _MapPageState extends State<MapPage> {
   List<Marker> markerList = List.empty(growable: true);
   Set<Marker> markerSet = Set();
   double zoom = 17.0;
-  KowloonBusStop? selectedBusStop;
+  BusStop? selectedBusStop;
+  DraggableScrollableController draggableScrollableController =
+      DraggableScrollableController();
+  List<RouteStop> routeStop = List.empty();
+  List<bool> expand = List.empty(growable: true);
 
   bool loadingRoute = false;
   bool textisExpanded = false;
@@ -59,12 +62,19 @@ class _MapPageState extends State<MapPage> {
     super.initState();
   }
 
-  _onMarkerTapped(KowloonBusStop stop) async {
+  _onMarkerTapped(BusStop stop) async {
     selectedBusStop = stop;
     loadingRoute = true;
     setState(() {});
+    draggableScrollableController.animateTo(0.4,
+        duration: Duration(seconds: 1), curve: Curves.bounceInOut);
+    expand.clear();
 
-    await Future.delayed(Duration(seconds: 3));
+    routeStop = await getRouteStopsByStopId(stop.stop) as List<RouteStop>;
+    routeStop.forEach((element) {
+      expand.add(false);
+    });
+
     loadingRoute = false;
     setState(() {});
   }
@@ -123,6 +133,7 @@ class _MapPageState extends State<MapPage> {
 
   _busList() {
     return DraggableScrollableSheet(
+        controller: draggableScrollableController,
         initialChildSize: 0.9,
         minChildSize: 0.1,
         maxChildSize: 0.9,
@@ -196,30 +207,36 @@ class _MapPageState extends State<MapPage> {
               child: ExpansionPanelList(
             expansionCallback: (int index, bool isExpanded) {
               setState(() {
-                textisExpanded = !textisExpanded;
+                expand[index] = !expand[index];
               });
             },
-            children: [
-              ExpansionPanel(
-                headerBuilder: (BuildContext context, bool isExpanded) {
-                  return ListTile(
-                    title: Text("798"),
-                  );
-                },
-                body: ListTile(
-                    title: Text("93k"),
-                    subtitle: const Text(
-                        'To delete this panel, tap the trash can icon'),
-                    trailing: const Icon(Icons.delete),
-                    onTap: () {
-                      print("123");
-                    }),
-                isExpanded: textisExpanded,
-              ),
-            ],
+            children: _buildRouteStop(),
           )),
         ),
       ],
     );
+  }
+
+  _buildRouteStop() {
+    List<ExpansionPanel> list = List.empty(growable: true);
+    for (int i = 0; i < routeStop.length; i++) {
+      list.add(ExpansionPanel(
+        canTapOnHeader: true,
+        headerBuilder: (BuildContext context, bool isExpanded) {
+          return ListTile(
+            title: Text(routeStop[i].route),
+          );
+        },
+        body: ListTile(
+            title: Text(routeStop[i].route),
+            subtitle: const Text('ETA : 3 MINS'),
+            onTap: () {
+              print(routeStop[i]);
+            }),
+        isExpanded: expand[i],
+      ));
+    }
+
+    return list;
   }
 }

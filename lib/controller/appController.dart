@@ -5,6 +5,9 @@ import 'package:flutter/material.dart';
 
 import '../api/apiHelper.dart';
 import '../api/kowloonBus_api.dart';
+import '../api/routeStop_api.dart';
+import '../models/BusStop.dart';
+import '../models/KowloonBusStop.dart';
 
 class AppController {
   String currentPage = "MAP";
@@ -14,7 +17,7 @@ class AppController {
   String errorMessage = "";
   LocationPermission permission = LocationPermission.denied;
   Position? position;
-  List<KowloonBusStop> stopData = List.empty(growable: true);
+  List stopData = List.empty(growable: true);
 
   Future<bool> init() async {
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
@@ -43,6 +46,7 @@ class AppController {
     }
 
     stopData = await getKowloonBusData();
+    await getRouteStopData();
 
     isLoading = false;
     return true;

@@ -24,7 +24,7 @@ class Api {
 
       return responseHandling(httpClient, await request.close());
     } catch (e) {
-      ApiResponse apiResponse = ApiResponse();
+      CallResponse apiResponse = CallResponse();
       apiResponse.status = "fail";
       apiResponse.msg = e.toString();
       return apiResponse;
@@ -41,7 +41,7 @@ class Api {
       throw Exception("No Status Code");
     }
 
-    ApiResponse apiResponse = ApiResponse();
+    CallResponse apiResponse = CallResponse();
     switch (response.statusCode) {
       case HttpStatus.noContent:
         apiResponse.status = "fail";
@@ -64,7 +64,7 @@ class Api {
   }
 }
 
-class ApiResponse {
+class CallResponse {
   String status = "";
   dynamic content = null;
   String msg = "";

@@ -1,17 +1,21 @@
 // ignore_for_file: prefer_const_constructors
 
 import 'package:better_bus/controller/appController.dart';
+import 'package:better_bus/dao/busStopProvider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter_phoenix/flutter_phoenix.dart';
 import 'package:get_it/get_it.dart';
 import 'bottomBar.dart';
 import 'constKey/appMenuKey.dart';
+import 'dao/routeStopProvider.dart';
 import 'router.dart';
 
 GetIt getIt = GetIt.instance;
 void main() {
   getIt.registerSingleton(AppController());
+  getIt.registerSingleton(BusStopProvider());
+  getIt.registerSingleton(RouteStopProvider());
   runApp(Phoenix(child: const MyApp()));
 }
 
