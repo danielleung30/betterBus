@@ -32,14 +32,14 @@ Future<List<BusStop>> getKowloonBusDataFromAPI() async {
   return returnList;
 }
 
-Future<List> getKowloonBusDataFromLocal() async {
-  List returnList = List.empty(growable: true);
+Future<List<BusStop>> getKowloonBusDataFromLocal() async {
+  List<BusStop> returnList = List.empty(growable: true);
   returnList = await getIt<BusStopProvider>().getAll();
   return returnList;
 }
 
-Future<List> getKowloonBusData() async {
-  List returnList = List.empty(growable: true);
+Future<List<BusStop>> getKowloonBusData() async {
+  List<BusStop> returnList = List.empty(growable: true);
   returnList = await getKowloonBusDataFromLocal();
   if (returnList.isEmpty) {
     returnList = await getKowloonBusDataFromAPI();

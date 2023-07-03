@@ -35,4 +35,14 @@ class BusStop implements DBModel {
         "lat": lat,
         "long": long,
       };
+  String getName(String lang) {
+    switch (lang) {
+      case "tc":
+        return name_tc;
+      case "en":
+        return name_en;
+      default:
+        return name_tc;
+    }
+  }
 }

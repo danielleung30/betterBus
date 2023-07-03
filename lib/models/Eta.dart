@@ -50,6 +50,28 @@ class Eta {
         data_timestamp: json['data_timestamp']);
   }
 
+  String getDest(String lang) {
+    switch (lang) {
+      case "tc":
+        return dest_tc;
+      case "en":
+        return dest_en;
+      default:
+        return dest_tc;
+    }
+  }
+
+  String getRmk(String lang) {
+    switch (lang) {
+      case "tc":
+        return rmk_tc;
+      case "en":
+        return rmk_en;
+      default:
+        return rmk_tc;
+    }
+  }
+
   static int calEATMinutes(String currentTimestamp, String etaTimestamp) {
     DateTime callTime =
         DateTime.parse(currentTimestamp.split("+")[0].replaceFirst("T", " "));

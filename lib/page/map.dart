@@ -113,7 +113,9 @@ class _MapPageState extends State<MapPage> {
           markerId: MarkerId(appController.stopData[i].stop),
           position: LatLng(double.parse(appController.stopData[i].lat),
               double.parse(appController.stopData[i].long)),
-          infoWindow: InfoWindow(title: appController.stopData[i].name_tc),
+          infoWindow: InfoWindow(
+              title:
+                  appController.stopData[i].getName(appController.currentLang)),
           onTap: () {
             _onMarkerTapped(appController.stopData[i]);
           },
@@ -195,7 +197,7 @@ class _MapPageState extends State<MapPage> {
             ],
           ),
           ListTile(
-              title: Text(selectedBusStop!.name_tc,
+              title: Text(selectedBusStop!.getName(appController.currentLang),
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold))),
           SizedBox(
@@ -228,7 +230,7 @@ class _MapPageState extends State<MapPage> {
           ],
         ),
         ListTile(
-            title: Text(selectedBusStop!.name_tc,
+            title: Text(selectedBusStop!.getName(appController.currentLang),
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold))),
         SingleChildScrollView(
@@ -253,18 +255,20 @@ class _MapPageState extends State<MapPage> {
         canTapOnHeader: true,
         headerBuilder: (BuildContext context, bool isExpanded) {
           return ListTile(
+            contentPadding: EdgeInsets.symmetric(vertical: 8, horizontal: 16.0),
             leading: Text(
               routeStop[i].route,
               style: TextStyle(fontSize: 20),
             ),
             title: routeStop[i].etaList.isEmpty
                 ? null
-                : Text("往${routeStop[i].etaList[0].dest_tc}"),
+                : Text(
+                    "${appController.currentLangPackage.toStr}${routeStop[i].etaList[0].getDest(appController.currentLang)}"),
             trailing: routeStop[i].etaList.isEmpty ||
                     routeStop[i].etaList[0].eta.isEmpty
                 ? Text("-")
                 : Text(
-                    "${Eta.calEATMinutes(routeStop[i].etaList[0].data_timestamp, routeStop[i].etaList[0].eta)}分鐘"),
+                    "${Eta.calEATMinutes(routeStop[i].etaList[0].data_timestamp, routeStop[i].etaList[0].eta)}${appController.currentLangPackage.minStr}"),
           );
         },
         body: routeStop[i].etaList.isEmpty || routeStop[i].etaList[0].eta == ""
@@ -277,7 +281,7 @@ class _MapPageState extends State<MapPage> {
                 itemBuilder: (context, index) {
                   return ListTile(
                       title: Text(
-                          "${routeStop[i].etaList[index].rmk_tc} ${Eta.calEATMinutes(routeStop[i].etaList[index].data_timestamp, routeStop[i].etaList[index].eta)}分鐘"),
+                          "${routeStop[i].etaList[index].getRmk(appController.currentLang)} - ${Eta.calEATMinutes(routeStop[i].etaList[index].data_timestamp, routeStop[i].etaList[index].eta)}${appController.currentLangPackage.minStr}"),
                       onTap: () {
                         print(routeStop[i].stop);
                       });

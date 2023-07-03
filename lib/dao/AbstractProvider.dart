@@ -36,7 +36,7 @@ class DBProvider<T extends DBModel> {
     return Sqflite.firstIntValue(list)!;
   }
 
-  Future<List> getAll(
+  Future<List<T>> getAll(
       {List<String>? columns, Map<String, dynamic>? query}) async {
     final Database db = await dbProvider.database;
     late List<Map<String, dynamic>> result;
