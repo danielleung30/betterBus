@@ -1,6 +1,7 @@
 // ignore_for_file: prefer_const_constructors, prefer_collection_literals
 
 import 'dart:async';
+import 'package:better_bus/api/eta_api.dart';
 import 'package:better_bus/controller/appController.dart';
 import 'package:better_bus/main.dart';
 import 'package:flutter/material.dart';
@@ -10,6 +11,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../api/routeStop_api.dart';
 import '../models/BusStop.dart';
+import '../models/Eta.dart';
 import '../models/RouteStop.dart';
 
 class MapPage extends StatefulWidget {
@@ -30,8 +32,9 @@ class _MapPageState extends State<MapPage> {
   DraggableScrollableController draggableScrollableController =
       DraggableScrollableController();
   List<RouteStop> routeStop = List.empty();
-  List<bool> expand = List.empty(growable: true);
 
+  Timer? timer;
+  int count = 60;
   bool loadingRoute = false;
   bool textisExpanded = false;
   void _onMapCreated(GoogleMapController controller) {
@@ -59,24 +62,43 @@ class _MapPageState extends State<MapPage> {
     } else {
       currentLocation = LatLng(0, 0);
     }
+    timer = Timer.periodic(Duration(seconds: 1), (Timer t) => _updateETA());
     super.initState();
   }
 
+  _updateETA() {
+    count--;
+    if (routeStop.isNotEmpty && count == 0) {
+      count = 60;
+      routeStop.forEach((e) {
+        getETA(e.stop, e.route, e.service_type).then((value) {
+          e.etaList = value.where((eta) => eta.dir == e.bound).toList();
+          setState(() {});
+        });
+      });
+    }
+  }
+
   _onMarkerTapped(BusStop stop) async {
-    selectedBusStop = stop;
     loadingRoute = true;
+    count = 60;
     setState(() {});
-    draggableScrollableController.animateTo(0.4,
-        duration: Duration(seconds: 1), curve: Curves.bounceInOut);
-    expand.clear();
 
     routeStop = await getRouteStopsByStopId(stop.stop) as List<RouteStop>;
-    routeStop.forEach((element) {
-      expand.add(false);
-    });
-
+    if (selectedBusStop != null) {
+      draggableScrollableController.animateTo(0.4,
+          duration: Duration(seconds: 1), curve: Curves.bounceInOut);
+    }
+    selectedBusStop = stop;
     loadingRoute = false;
     setState(() {});
+
+    routeStop.forEach((e) {
+      getETA(e.stop, e.route, e.service_type).then((value) {
+        e.etaList = value.where((eta) => eta.dir == e.bound).toList();
+        setState(() {});
+      });
+    });
   }
 
   _createMarker() {
@@ -99,6 +121,12 @@ class _MapPageState extends State<MapPage> {
       }
     }
     markerSet = Set.of(markerList);
+  }
+
+  @override
+  void dispose() {
+    timer?.cancel();
+    super.dispose();
   }
 
   @override
@@ -182,6 +210,7 @@ class _MapPageState extends State<MapPage> {
 
     return ListView(
       controller: scrollController,
+      shrinkWrap: true,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -207,7 +236,7 @@ class _MapPageState extends State<MapPage> {
               child: ExpansionPanelList(
             expansionCallback: (int index, bool isExpanded) {
               setState(() {
-                expand[index] = !expand[index];
+                routeStop[index].expand = !routeStop[index].expand;
               });
             },
             children: _buildRouteStop(),
@@ -224,16 +253,37 @@ class _MapPageState extends State<MapPage> {
         canTapOnHeader: true,
         headerBuilder: (BuildContext context, bool isExpanded) {
           return ListTile(
-            title: Text(routeStop[i].route),
+            leading: Text(
+              routeStop[i].route,
+              style: TextStyle(fontSize: 20),
+            ),
+            title: routeStop[i].etaList.isEmpty
+                ? null
+                : Text("往${routeStop[i].etaList[0].dest_tc}"),
+            trailing: routeStop[i].etaList.isEmpty ||
+                    routeStop[i].etaList[0].eta.isEmpty
+                ? Text("-")
+                : Text(
+                    "${Eta.calEATMinutes(routeStop[i].etaList[0].data_timestamp, routeStop[i].etaList[0].eta)}分鐘"),
           );
         },
-        body: ListTile(
-            title: Text(routeStop[i].route),
-            subtitle: const Text('ETA : 3 MINS'),
-            onTap: () {
-              print(routeStop[i]);
-            }),
-        isExpanded: expand[i],
+        body: routeStop[i].etaList.isEmpty || routeStop[i].etaList[0].eta == ""
+            ? ListView(
+                shrinkWrap: true,
+              )
+            : ListView.builder(
+                shrinkWrap: true,
+                itemCount: routeStop[i].etaList.length,
+                itemBuilder: (context, index) {
+                  return ListTile(
+                      title: Text(
+                          "${routeStop[i].etaList[index].rmk_tc} ${Eta.calEATMinutes(routeStop[i].etaList[index].data_timestamp, routeStop[i].etaList[index].eta)}分鐘"),
+                      onTap: () {
+                        print(routeStop[i].stop);
+                      });
+                },
+              ),
+        isExpanded: routeStop[i].expand,
       ));
     }
 

@@ -1,12 +1,16 @@
 import 'package:better_bus/models/DBModel.dart';
 
+import 'Eta.dart';
+
 class RouteStop implements DBModel {
   final String route;
   final String bound;
   final String service_type;
   final String seq;
   final String stop;
+  List<Eta> etaList = List.empty(growable: true);
 
+  bool expand = false;
   RouteStop(
       {required this.route,
       required this.bound,
